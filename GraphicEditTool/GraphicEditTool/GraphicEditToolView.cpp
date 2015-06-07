@@ -1583,10 +1583,12 @@ void CGraphicEditToolView::OnEditCopy()//ctrl + c
 
 void CGraphicEditToolView::OnEditCut()//ctrl + x
 {
-	OnEditCopy();
-	m_Delete_Ready = -1;//폴리라인 지울 시 부분포인트만 지우지 않도록.
-	m_CopyObNUm -=10;
-	OnDeletekey();
+	if (m_TargetCount > 0){
+		OnEditCopy();
+		m_Delete_Ready = -1;//폴리라인 지울 시 부분포인트만 지우지 않도록.
+		m_CopyObNUm -= 10;
+		OnDeletekey();
+	}
 }
 
 
