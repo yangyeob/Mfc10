@@ -1,0 +1,28 @@
+#pragma once
+#include <afxtempl.h>
+class Ob_Elipse : public CObject 
+{
+public:
+	COLORREF m_color;
+	int m_think;
+	int pattennum;
+	int Ob_Num;	
+	int Ob_Count;
+public:
+	Ob_Elipse(void);
+	~Ob_Elipse(void);
+	COLORREF GetColor(void);
+	bool SetColor(COLORREF color);
+	int GetThinks(void);
+	int Get_ObNum(void);
+	int Get_ObCount(void);
+	bool SetObCount(int);
+	bool SetThinks(int);
+	bool MoveAll(int move_X, int move_Y);
+	bool Move_SubPoint(int Pointnum, int move_X, int move_Y);
+	int m_x1, m_x2, m_y1,m_y2;
+	bool RemoveAll(void);
+	Ob_Elipse& operator=(const Ob_Elipse& var);
+	bool m_Grouped;
+	CList <int> GroupList;
+};
