@@ -1,0 +1,397 @@
+
+// GraphicEditToolDoc.cpp : CGraphicEditToolDoc 클래스의 구현
+//
+
+#include "stdafx.h"
+// SHARED_HANDLERS는 미리 보기, 축소판 그림 및 검색 필터 처리기를 구현하는 ATL 프로젝트에서 정의할 수 있으며
+// 해당 프로젝트와 문서 코드를 공유하도록 해 줍니다.
+#ifndef SHARED_HANDLERS
+
+#endif
+#include "MainFrm.h"
+#include "GraphicEditToolDoc.h"
+#include "GraphicEditToolView.h"//View를 include 할때는 반드시 Doc 헤더파일이 위에잇어야한다
+#include "GraphicEditTool.h"
+
+
+
+#include <propkey.h>
+
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#endif
+
+// CGraphicEditToolDoc
+
+IMPLEMENT_DYNCREATE(CGraphicEditToolDoc, CDocument)
+
+BEGIN_MESSAGE_MAP(CGraphicEditToolDoc, CDocument)
+END_MESSAGE_MAP()
+
+
+// CGraphicEditToolDoc 생성/소멸
+
+CGraphicEditToolDoc::CGraphicEditToolDoc()
+{
+	// TODO: 여기에 일회성 생성 코드를 추가합니다.
+
+}
+
+CGraphicEditToolDoc::~CGraphicEditToolDoc()
+{
+}
+
+BOOL CGraphicEditToolDoc::OnNewDocument()
+{
+	if (!CDocument::OnNewDocument())
+		return FALSE;
+
+	//Doc에서 MainFrame을 거쳐서 View로 접근하면 오류가 나서 
+	//MainFrame을 거치지 않고 바로 View로 접근을 하였다.
+	CGraphicEditToolView * view = (CGraphicEditToolView *)m_viewList.GetHead();
+	//지금까지 만든 객체 다 지우고서 기본 플래그들 초기화
+	view->Ob_PtrList.RemoveAll();
+	view->m_Mode = 0;
+	view->m_TargetCount =-1;
+	view->m_ObjectCount =0;
+	view->m_MoveMode = false;
+	view->m_Delete_Ready = -1;
+	view->m_bDrawMode = false;
+	view->m_CopyObNUm = -1;
+	view->m_GroupCount = 1;
+	view->m_SpacePushed = false;
+	
+	return TRUE;
+}
+
+
+
+
+// CGraphicEditToolDoc serialization
+
+void CGraphicEditToolDoc::Serialize(CArchive& ar)
+{CArray<char,char> str;
+	if (ar.IsStoring())
+	{
+		// TODO: 여기에 저장 코드를 추가합니다.
+		CGraphicEditToolView * view = (CGraphicEditToolView *)m_viewList.GetHead();
+		//view->Ob_PtrList.Serialize(ar);
+		int count;
+		count = view->Ob_PtrList.GetCount();
+		ar.Write(&count,sizeof(int));
+		int size,obnum;
+		POSITION pos;
+		void * m_Ob_Ptr;
+		pos =  view->Ob_PtrList.GetHeadPosition();
+		for(int i=0;i< count;i++){
+			m_Ob_Ptr =  view->Ob_PtrList.GetNext(pos);
+			Ob_PolyLine *PLine = (Ob_PolyLine*)m_Ob_Ptr;
+			if(PLine->Get_ObNum() == 1){
+				Ob_Line *Line = (Ob_Line*)m_Ob_Ptr;
+				obnum=1;
+				ar.Write(&obnum,sizeof(int));
+				COLORREF color = Line->GetColor();
+				ar.Write(&color,sizeof(COLORREF));
+				int obCount = Line->Get_ObCount();
+				ar.Write(&obCount,sizeof(int));
+				int thin = Line->GetThinks();
+				ar.Write(&thin,sizeof(int));
+				//bool Grouped;
+				ar.Write(&(Line->m_Grouped),sizeof(bool));
+				Line->GroupList.Serialize(ar);
+				ar.Write(&(Line->GetPrePoint()),sizeof(CPoint));
+				ar.Write(&(Line->GetNextPoint()),sizeof(CPoint));
+				
+			}else if(PLine->Get_ObNum() == 2){
+				obnum=2;
+				ar.Write(&obnum,sizeof(int));
+				COLORREF color = PLine->Get_Line_Color();
+				ar.Write(&color,sizeof(COLORREF));
+				int obCount = PLine->Get_ObCount();
+				ar.Write(&obCount,sizeof(int));
+				int thin = PLine->GetThinks();
+				ar.Write(&thin,sizeof(int));
+				//bool Grouped;
+				ar.Write(&(PLine->m_Grouped),sizeof(bool));
+				PLine->GroupList.Serialize(ar);
+				PLine->List.Serialize(ar);
+
+
+			}else if(PLine->Get_ObNum() == 3){
+				Ob_Rectangle *RLine = (Ob_Rectangle*)m_Ob_Ptr;
+				//size = sizeof(RLine); // 객체 사이즈 write 후 
+				obnum=3;
+				ar.Write(&obnum,sizeof(int));
+				COLORREF color = RLine->GetColor();
+				ar.Write(&color,sizeof(COLORREF));
+				int obCount = RLine->Get_ObCount();
+				ar.Write(&obCount,sizeof(int));
+				int thin = RLine->GetThinks();
+				ar.Write(&thin,sizeof(int));
+				//int m_x1, m_x2, m_y1,m_y2;
+				ar.Write(&(RLine->m_x1),sizeof(int));
+				ar.Write(&(RLine->m_x2),sizeof(int));
+				ar.Write(&(RLine->m_y1),sizeof(int));
+				ar.Write(&(RLine->m_y2),sizeof(int));
+				//bool Grouped;
+				ar.Write(&(RLine->m_Grouped),sizeof(bool));
+				RLine->GroupList.Serialize(ar);
+			}else if(PLine->Get_ObNum() == 4){
+				Ob_Elipse *ELine = (Ob_Elipse*)m_Ob_Ptr;
+				//size = sizeof(ELine); // 객체 사이즈 write 후 
+				obnum=4;
+				ar.Write(&obnum,sizeof(int));
+				COLORREF color = ELine->GetColor();
+				ar.Write(&color,sizeof(COLORREF));
+				int obCount = ELine->Get_ObCount();
+				ar.Write(&obCount,sizeof(int));
+				int thin = ELine->GetThinks();
+				ar.Write(&thin,sizeof(int));
+				//int m_x1, m_x2, m_y1,m_y2;
+				ar.Write(&(ELine->m_x1),sizeof(int));
+				ar.Write(&(ELine->m_x2),sizeof(int));
+				ar.Write(&(ELine->m_y1),sizeof(int));
+				ar.Write(&(ELine->m_y2),sizeof(int));
+				//bool Grouped;
+				ar.Write(&(ELine->m_Grouped),sizeof(bool));
+				ELine->GroupList.Serialize(ar);
+			}else if(PLine->Get_ObNum() == 5){
+				Ob_Text *TLine = (Ob_Text*)m_Ob_Ptr;
+				//size = sizeof(TLine); // 객체 사이즈 write 후 
+				obnum=5;
+				ar.Write(&obnum,sizeof(int));
+				COLORREF color = TLine->GetColor();
+				ar.Write(&color,sizeof(COLORREF));
+				int obCount = TLine->Get_ObCount();
+				ar.Write(&obCount,sizeof(int));
+				int thin = TLine->GetThinks();
+				ar.Write(&thin,sizeof(int));
+				//int m_x1, m_x2, m_y1,m_y2;
+				ar.Write(&(TLine->m_x1),sizeof(int));
+				ar.Write(&(TLine->m_x2),sizeof(int));
+				ar.Write(&(TLine->m_y1),sizeof(int));
+				ar.Write(&(TLine->m_y2),sizeof(int));
+				//bool Grouped;
+				ar.Write(&(TLine->m_Grouped),sizeof(bool));
+				TLine->GroupList.Serialize(ar);
+				TLine->m_str.Serialize(ar);
+				//str.Copy(TLine->m_str);//.Copy(str);
+				//str.Serialize(ar);
+
+
+			}
+	
+		}
+
+		ar.Write(&(view->m_Mode),sizeof(int));
+		ar.Write(&(view->m_TargetCount),sizeof(int));
+		ar.Write(&(view->m_ObjectCount),sizeof(int));
+		ar.Write(&(view->m_MoveMode),sizeof(bool));
+		ar.Write(&(view->m_Delete_Ready),sizeof(int));
+		ar.Write(&(view->m_bDrawMode),sizeof(bool));
+		ar.Write(&(view->m_CopyObNUm),sizeof(int));
+		ar.Write(&(view->m_GroupCount),sizeof(int));
+		ar.Write(&(view->m_SpacePushed),sizeof(bool));
+	}
+	else
+	{
+		// TODO: 여기에 로딩 코드를 추가합니다.
+		OnNewDocument();
+		CGraphicEditToolView * view = (CGraphicEditToolView *)m_viewList.GetHead();
+		//view->Ob_PtrList.Serialize(ar);
+		
+		int count;
+		ar.Read(&count,sizeof(int));
+		int size,obnum;
+		POSITION pos;
+		void * m_Ob_Ptr;
+		view->Ob_PtrList.RemoveAll();
+		pos =  view->Ob_PtrList.GetHeadPosition();
+		for(int i=0;i< count;i++){
+			//m_Ob_Ptr =  view->Ob_PtrList.GetNext(pos);
+		//= (Ob_PolyLine*)m_Ob_Ptr;
+			ar.Read(&obnum,sizeof(int));
+			if(obnum == 1){
+				Ob_Line *Line = new Ob_Line ;
+				COLORREF color ;
+				ar.Read(&color,sizeof(COLORREF));
+				Line->SetColor(color);
+				int obCount ;
+				ar.Read(&obCount,sizeof(int));
+				Line->SetObCount(obCount);
+				int thin;
+				ar.Read(&thin,sizeof(int));
+				Line->SetThinks(thin);
+				//bool Grouped;
+				ar.Read(&(Line->m_Grouped),sizeof(bool));
+				Line->GroupList.Serialize(ar);
+				CPoint point,npoint;
+				ar.Read(&point,sizeof(CPoint));
+				Line->SetPrePoint(point);
+				ar.Read(&npoint,sizeof(CPoint));
+				Line->SetNextPoint(npoint);
+				view->Ob_PtrList.AddTail(Line);
+			}else if(obnum == 2){
+				Ob_PolyLine *PLine = new Ob_PolyLine;
+				COLORREF color ;
+				ar.Read(&color,sizeof(COLORREF));
+				PLine->Set_Line_Color(color);
+				int obCount ;
+				ar.Read(&obCount,sizeof(int));
+				PLine->SetObCount(obCount);
+				int thin;
+				ar.Read(&thin,sizeof(int));
+				PLine->SetThinks(thin);
+				//bool Grouped;
+				ar.Read(&(PLine->m_Grouped),sizeof(bool));
+				PLine->GroupList.Serialize(ar);
+				PLine->List.Serialize(ar);
+				view->Ob_PtrList.AddTail(PLine);
+			}else if(obnum == 3){
+				Ob_Rectangle *RLine = new Ob_Rectangle;
+				COLORREF color ;
+				ar.Read(&color,sizeof(COLORREF));
+				RLine->SetColor(color);
+				int obCount ;
+				ar.Read(&obCount,sizeof(int));
+				RLine->SetObCount(obCount);
+				int thin;
+				ar.Read(&thin,sizeof(int));
+				RLine->SetThinks(thin);
+				//int m_x1, m_x2, m_y1,m_y2;
+				ar.Read(&(RLine->m_x1),sizeof(int));
+				ar.Read(&(RLine->m_x2),sizeof(int));
+				ar.Read(&(RLine->m_y1),sizeof(int));
+				ar.Read(&(RLine->m_y2),sizeof(int));
+				//bool Grouped;
+				ar.Read(&(RLine->m_Grouped),sizeof(bool));
+				RLine->GroupList.Serialize(ar);
+				view->Ob_PtrList.AddTail(RLine);
+			}else if(obnum == 4){
+				Ob_Elipse *ELine= new Ob_Elipse;
+				COLORREF color ;
+				ar.Read(&color,sizeof(COLORREF));
+				ELine->SetColor(color);
+				int obCount ;
+				ar.Read(&obCount,sizeof(int));
+				ELine->SetObCount(obCount);
+				int thin;
+				ar.Read(&thin,sizeof(int));
+				ELine->SetThinks(thin);
+				//int m_x1, m_x2, m_y1,m_y2;
+				ar.Read(&(ELine->m_x1),sizeof(int));
+				ar.Read(&(ELine->m_x2),sizeof(int));
+				ar.Read(&(ELine->m_y1),sizeof(int));
+				ar.Read(&(ELine->m_y2),sizeof(int));
+				//bool Grouped;
+				ar.Read(&(ELine->m_Grouped),sizeof(bool));
+				ELine->GroupList.Serialize(ar);
+				view->Ob_PtrList.AddTail(ELine);
+			}else if(obnum == 5){
+				Ob_Text *TLine= new Ob_Text;
+				COLORREF color ;
+				ar.Read(&color,sizeof(COLORREF));
+				TLine->SetColor(color);
+				int obCount ;
+				ar.Read(&obCount,sizeof(int));
+				TLine->SetObCount(obCount);
+				int thin;
+				ar.Read(&thin,sizeof(int));
+				TLine->SetThinks(thin);
+				//int m_x1, m_x2, m_y1,m_y2;
+				ar.Read(&(TLine->m_x1),sizeof(int));
+				ar.Read(&(TLine->m_x2),sizeof(int));
+				ar.Read(&(TLine->m_y1),sizeof(int));
+				ar.Read(&(TLine->m_y2),sizeof(int));
+				//bool Grouped;
+				ar.Read(&(TLine->m_Grouped),sizeof(bool));
+				TLine->GroupList.Serialize(ar);
+				TLine->m_str.Serialize(ar);
+				view->Ob_PtrList.AddTail(TLine);
+			}
+	
+		}
+
+
+		ar.Read(&(view->m_Mode),sizeof(int));
+		ar.Read(&(view->m_TargetCount),sizeof(int));
+		ar.Read(&(view->m_ObjectCount),sizeof(int));
+		ar.Read(&(view->m_MoveMode),sizeof(bool));
+		ar.Read(&(view->m_Delete_Ready),sizeof(int));
+		ar.Read(&(view->m_bDrawMode),sizeof(bool));
+		ar.Read(&(view->m_CopyObNUm),sizeof(int));
+		ar.Read(&(view->m_GroupCount),sizeof(int));
+		ar.Read(&(view->m_SpacePushed),sizeof(bool));
+	}
+}
+
+#ifdef SHARED_HANDLERS
+
+// 축소판 그림을 지원합니다.
+void CGraphicEditToolDoc::OnDrawThumbnail(CDC& dc, LPRECT lprcBounds)
+{
+	// 문서의 데이터를 그리려면 이 코드를 수정하십시오.
+	dc.FillSolidRect(lprcBounds, RGB(255, 255, 255));
+
+	CString strText = _T("TODO: implement thumbnail drawing here");
+	LOGFONT lf;
+
+	CFont* pDefaultGUIFont = CFont::FromHandle((HFONT) GetStockObject(DEFAULT_GUI_FONT));
+	pDefaultGUIFont->GetLogFont(&lf);
+	lf.lfHeight = 36;
+
+	CFont fontDraw;
+	fontDraw.CreateFontIndirect(&lf);
+
+	CFont* pOldFont = dc.SelectObject(&fontDraw);
+	dc.DrawText(strText, lprcBounds, DT_CENTER | DT_WORDBREAK);
+	dc.SelectObject(pOldFont);
+}
+
+// 검색 처리기를 지원합니다.
+void CGraphicEditToolDoc::InitializeSearchContent()
+{
+	CString strSearchContent;
+	// 문서의 데이터에서 검색 콘텐츠를 설정합니다.
+	// 콘텐츠 부분은 ";"로 구분되어야 합니다.
+
+	// 예: strSearchContent = _T("point;rectangle;circle;ole object;");
+	SetSearchContent(strSearchContent);
+}
+
+void CGraphicEditToolDoc::SetSearchContent(const CString& value)
+{
+	if (value.IsEmpty())
+	{
+		RemoveChunk(PKEY_Search_Contents.fmtid, PKEY_Search_Contents.pid);
+	}
+	else
+	{
+		CMFCFilterChunkValueImpl *pChunk = NULL;
+		ATLTRY(pChunk = new CMFCFilterChunkValueImpl);
+		if (pChunk != NULL)
+		{
+			pChunk->SetTextValue(PKEY_Search_Contents, value, CHUNK_TEXT);
+			SetChunkValue(pChunk);
+		}
+	}
+}
+
+#endif // SHARED_HANDLERS
+
+// CGraphicEditToolDoc 진단
+
+#ifdef _DEBUG
+void CGraphicEditToolDoc::AssertValid() const
+{
+	CDocument::AssertValid();
+}
+
+void CGraphicEditToolDoc::Dump(CDumpContext& dc) const
+{
+	CDocument::Dump(dc);
+}
+#endif //_DEBUG
+
+
+// CGraphicEditToolDoc 명령

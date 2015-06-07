@@ -1,0 +1,32 @@
+#pragma once
+#include <afxtempl.h>
+class Ob_PolyLine : public CObject 
+{
+public:
+	int Ob_Num;	
+	int Ob_Count;
+	CPen pen;
+	int m_Lpatt;
+	int m_Lthin;
+	COLORREF m_Lcolor;
+public:
+	Ob_PolyLine(void);
+	~Ob_PolyLine(void);
+	COLORREF Get_Line_Color(void);
+	CList <POINT,POINT&> List;
+	bool Set_Line_Color(COLORREF color);
+	int GetThinks(void);
+	int Get_ObNum(void);
+	int Get_ObCount(void);
+	bool SetObCount(int);
+	bool SetThinks(int);
+	bool Delete_SubPoint(int pointnum);
+	bool MoveAll(int move_X, int move_Y);
+	bool Move_SubPoint(int Pointnum, int move_X, int move_Y);
+	Ob_PolyLine& operator=(const Ob_PolyLine& var);
+
+
+	bool m_Grouped;
+	CList <int> GroupList;
+};
+
