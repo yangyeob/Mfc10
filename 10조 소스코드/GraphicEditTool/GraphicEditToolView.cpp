@@ -121,6 +121,7 @@ CGraphicEditToolView::CGraphicEditToolView()
 	m_CopyObNUm = -1;
 	m_GroupCount = 1;
 	m_SpacePushed = false;
+//	SetCursor(LoadCursor(NULL, IDC_ARROW));
 }
 
 CGraphicEditToolView::~CGraphicEditToolView()
@@ -202,14 +203,11 @@ void CGraphicEditToolView::OnLButtonDown(UINT nFlags, CPoint point)
 
 					//------------------------
 					//커서 바꾸는 코드 삽입.
-
-
-
+				hCursor = LoadCursor(NULL, IDC_HAND);
+				SetCursor(hCursor);
 					//--------------------------
 				}
 			}
-	
-			
 			if(m_TargetCount >0){
 
 				POSITION pos_Ptr,pos_Ob;
@@ -621,7 +619,7 @@ void CGraphicEditToolView::OnLButtonUp(UINT nFlags, CPoint point)
 {
 	
 	CClientDC dc(this);
-	
+	SetCursor(LoadCursor(NULL, IDC_ARROW));
 	switch(m_Mode){
 	case 0:
 
