@@ -1,0 +1,31 @@
+#pragma once
+#include <afxtempl.h>
+class Ob_Text : public CObject 
+{
+public:
+	int Ob_Num;	
+	int Ob_Count;
+	CFont font;
+	int m_font;
+	int m_fsize;
+	COLORREF m_fontcolor;
+	COLORREF m_bkcolor;
+public:
+	Ob_Text(void);
+	~Ob_Text(void);
+	COLORREF GetColor(void);
+//	CList <POINT,POINT&> List;
+	int Get_ObNum(void);
+	int Get_ObCount(void);
+	bool SetObCount(int);
+	bool Delete_SubPoint(int pointnum);
+	bool MoveAll(int move_X, int move_Y);
+	bool Move_SubPoint(int Pointnum, int move_X, int move_Y);
+	int m_x1, m_x2, m_y1,m_y2;
+	CArray <char,char> m_str;//¹®ÀÚ¿­
+	
+	bool RemoveAll(void);
+	Ob_Text& operator=(const Ob_Text& var);
+	bool m_Grouped;
+	CList <int> GroupList;
+};

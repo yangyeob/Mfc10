@@ -1,0 +1,118 @@
+#include "StdAfx.h"
+#include "Ob_PolyLine.h"
+
+Ob_PolyLine::Ob_PolyLine(void)
+{
+	m_Line_color = RGB(255,0,0);//기본 red 선색
+	m_think = 3;// 기본 3pt 굵기
+	pattennum = 1;//기본 첫버째 패턴
+	Ob_Num = 2;
+}
+
+Ob_PolyLine::~Ob_PolyLine(void)
+{
+
+}
+
+
+COLORREF Ob_PolyLine::Get_Line_Color(void)
+{
+	return m_Line_color;
+}
+
+
+bool Ob_PolyLine::Set_Line_Color(COLORREF color)
+{
+	m_Line_color = color;
+	return false;
+}
+
+
+int Ob_PolyLine::GetThinks(void)
+{
+	return m_think;
+}
+
+
+bool Ob_PolyLine::SetThinks(int think)
+{
+	m_think = think;
+	return true;
+}
+
+
+bool Ob_PolyLine::Delete_SubPoint(int pointnum)
+{
+	POSITION pos;
+	pos = List.GetHeadPosition();
+	for(int i =0;i < pointnum -1;i++){
+		List.GetNext(pos);
+	}
+	List.RemoveAt(pos);
+	return false;
+}
+
+
+bool Ob_PolyLine::MoveAll(int move_X, int move_Y)
+{
+	POSITION pos;
+	pos = List.GetHeadPosition();
+	while(pos != NULL){
+		List.GetAt(pos).x -= move_X;
+		List.GetAt(pos).y -= move_Y;
+		List.GetNext(pos);
+	}
+
+
+
+	return true;
+}
+
+
+bool Ob_PolyLine::Move_SubPoint(int Pointnum, int move_X, int move_Y)
+{
+	POSITION pos;
+	pos = List.GetHeadPosition();
+	for(int i =0;i < Pointnum -1;i++){
+		List.GetNext(pos);
+	}
+
+		List.GetAt(pos).x -= move_X;
+		List.GetAt(pos).y -= move_Y;
+	
+	return true;
+}
+
+
+int Ob_PolyLine::Get_ObNum(void)
+{
+	return Ob_Num;
+}
+int Ob_PolyLine::Get_ObCount(void)
+{
+	return Ob_Count;
+}
+bool Ob_PolyLine::SetObCount(int count)
+{
+	Ob_Count = count;
+	return true;
+}
+
+Ob_PolyLine& Ob_PolyLine::operator=(const Ob_PolyLine& var){
+
+	this->m_Line_color =var.m_Line_color;
+	this->m_think = var.m_think;
+	
+	POSITION pos;
+	CPoint point;
+	pos = var.List.GetHeadPosition();
+	this->List.RemoveAll();
+	while(pos != NULL){
+		point = var.List.GetNext(pos);
+		this->List.AddTail(point);
+	}
+
+	return *this;
+
+
+}
