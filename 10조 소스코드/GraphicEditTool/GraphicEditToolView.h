@@ -114,6 +114,7 @@ public:
 	afx_msg void OnFontstyle1();
 	afx_msg void OnFontstyle2();
 	afx_msg void OnFontstyle3();
+	afx_msg BOOL OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message);
 };
 
 #ifndef _DEBUG  // GraphicEditToolView.cpp의 디버그 버전

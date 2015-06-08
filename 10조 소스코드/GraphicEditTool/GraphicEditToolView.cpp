@@ -104,6 +104,7 @@ BEGIN_MESSAGE_MAP(CGraphicEditToolView, CView)
 	ON_COMMAND(ID_fontstyle1, &CGraphicEditToolView::OnFontstyle1)
 	ON_COMMAND(ID_fontstyle2, &CGraphicEditToolView::OnFontstyle2)
 	ON_COMMAND(ID_fontstyle3, &CGraphicEditToolView::OnFontstyle3)
+	ON_WM_SETCURSOR()
 END_MESSAGE_MAP()
 
 // CGraphicEditToolView 생성/소멸
@@ -189,12 +190,8 @@ void CGraphicEditToolView::OnLButtonDown(UINT nFlags, CPoint point)
 	
 	switch(m_Mode){
 	case 0:
-	
-
-
 	//포인트리스트 처리부분
-	
-			//마우스 이동중 타겟이 잡힘
+	//마우스 이동중 타겟이 잡힘
 			if(m_MoveMode == false){
 				m_MoveMode = true;
 				
@@ -211,46 +208,39 @@ void CGraphicEditToolView::OnLButtonDown(UINT nFlags, CPoint point)
 			if(m_TargetCount >0){
 
 				POSITION pos_Ptr,pos_Ob;
-	void * m_Ob_Ptr;
-	pos_Ptr = Ob_PtrList.GetHeadPosition();
-	
-	for(int i=0;i< m_TargetCount;i++){
-		m_Ob_Ptr = Ob_PtrList.GetNext(pos_Ptr);
-	}	Ob_PolyLine *PLine = (Ob_PolyLine*)m_Ob_Ptr;
-	Ob_PolyLine *BLine = (Ob_PolyLine*)m_Ob_Ptr;
-	if(BLine->m_Grouped == true&&this->m_SpacePushed !=true){
-		int Groupnum = -1;
-		if(BLine->GroupList.GetHeadPosition() != NULL){
-			Groupnum = BLine->GroupList.GetTail();
-		}else{
-		BLine->m_Grouped = false;
-		break;
-		}
-		POSITION pos_buf = Ob_PtrList.GetHeadPosition();	
-		void * m_Ob_Buf;
-		m_MultySelect.RemoveAll();
-		while(pos_buf != NULL){
-			if(pos_buf == NULL){ break;}
-			m_Ob_Buf = Ob_PtrList.GetNext(pos_buf);
-			Ob_PolyLine *BufLine = (Ob_PolyLine*)m_Ob_Buf;
-			
-			if(BufLine->GroupList.GetHeadPosition() ==NULL){break;}
-			if(BufLine->GroupList.GetTail() == Groupnum){
-				int buf = BufLine->Get_ObCount();
-				m_MultySelect.AddTail(buf);
-			}
-		}
-		
-		Invalidate();
-	}
-
-	
-		//다중 선택시 m_MultySelect에 ObCount를 넣는다.
-		if(m_SpacePushed != false){
-			if(m_MultySelect.Find(m_TargetCount) == false){
-			m_MultySelect.AddTail(m_TargetCount);
-			}
-			
+				void * m_Ob_Ptr;
+				pos_Ptr = Ob_PtrList.GetHeadPosition();
+				for(int i=0;i< m_TargetCount;i++){
+					m_Ob_Ptr = Ob_PtrList.GetNext(pos_Ptr);
+				}	Ob_PolyLine *PLine = (Ob_PolyLine*)m_Ob_Ptr;
+				Ob_PolyLine *BLine = (Ob_PolyLine*)m_Ob_Ptr;
+				if(BLine->m_Grouped == true&&this->m_SpacePushed !=true){
+					int Groupnum = -1;
+					if(BLine->GroupList.GetHeadPosition() != NULL){
+						Groupnum = BLine->GroupList.GetTail();
+					}else{
+						BLine->m_Grouped = false;
+						break;
+					}
+					POSITION pos_buf = Ob_PtrList.GetHeadPosition();	
+					void * m_Ob_Buf;
+					m_MultySelect.RemoveAll();
+					while(pos_buf != NULL){
+						if(pos_buf == NULL){ break;}
+						m_Ob_Buf = Ob_PtrList.GetNext(pos_buf);
+						Ob_PolyLine *BufLine = (Ob_PolyLine*)m_Ob_Buf;	
+						if(BufLine->GroupList.GetHeadPosition() ==NULL){break;}
+						if(BufLine->GroupList.GetTail() == Groupnum){
+							int buf = BufLine->Get_ObCount();
+							m_MultySelect.AddTail(buf);
+						}
+					}
+					Invalidate();
+				}//다중 선택시 m_MultySelect에 ObCount를 넣는다.
+				if(m_SpacePushed != false){
+					if(m_MultySelect.Find(m_TargetCount) == false){
+						m_MultySelect.AddTail(m_TargetCount);
+					}
 				}
 	//타겟이 잡히 상태에서 클릭이 될 경우
 			if(PLine->Get_ObNum() == 1){
@@ -313,8 +303,7 @@ void CGraphicEditToolView::OnLButtonDown(UINT nFlags, CPoint point)
 				
 				}
 			}
-				break;
-			
+			break;
 	case 3:
 		
 		m_bDrawMode = true;
@@ -619,7 +608,8 @@ void CGraphicEditToolView::OnLButtonUp(UINT nFlags, CPoint point)
 {
 	
 	CClientDC dc(this);
-	SetCursor(LoadCursor(NULL, IDC_ARROW));
+	hCursor = LoadCursor(NULL, IDC_ARROW);
+	SetCursor(hCursor);
 	switch(m_Mode){
 	case 0:
 
@@ -2331,4 +2321,20 @@ void CGraphicEditToolView::OnFontstyle2()
 void CGraphicEditToolView::OnFontstyle3()
 {
 	OptionSetting(NULL,-1,-1,3,NULL,NULL,NULL,NULL);
+}
+
+
+BOOL CGraphicEditToolView::OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message)
+{
+	// TODO: 여기에 메시지 처리기 코드를 추가 및/또는 기본값을 호출합니다.
+	if (m_TargetCount != -1 && m_MoveMode == true){
+		hCursor = LoadCursor(NULL, IDC_HAND);
+		SetCursor(hCursor);
+	}
+	else{
+		hCursor = LoadCursor(NULL, IDC_ARROW);
+		SetCursor(hCursor);
+	}
+	return TRUE;
+//	return CView::OnSetCursor(pWnd, nHitTest, message);
 }
